@@ -1,65 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Demo - Super Mario World</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-    }
-    /* Canvas onde o emulador renderiza */
-    #canvas {
-      border: 2px solid #fff;
-    }
-    /* Mensagem exibida quando a demo termina */
-    #demo-message {
-      display: none;
-      margin-top: 20px;
-      font-size: 24px;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="canvas" width="640" height="480"></canvas>
-  <div id="demo-message">Demo finalizada. Cadastre-se para jogar mais!</div>
-  
-  <!-- Inclua o script do emulador SNES9x-2005-Wasm -->
-  <script src="https://kazuki-4ys.github.io/web_apps/snes9x-2005-wasm/snes9x.js"></script>
-  
-  <script>
-    // Aguarda a inicialização do módulo WebAssembly
-    if (typeof Module !== 'undefined') {
-      Module.onRuntimeInitialized = function() {
-        var canvas = document.getElementById('canvas');
-        // Configura o canvas para renderização (se necessário)
-        Module.canvas = canvas;
-        
-        // Carrega a ROM do Super Mario World a partir do GitHub (link raw)
-        fetch("https://raw.githubusercontent.com/Lusk2000/retroflix/main/Super%20Mario%20World%20(U)%20[!].smc")
-          .then(response => {
-            if (!response.ok) {
-              throw new Error("Erro na resposta: " + response.statusText);
-            }
-            return response.arrayBuffer();
-          })
-          .then(romBuffer => {
-            var romData = new Uint8Array(romBuffer);
-            // Chamada para carregar a ROM – ajuste "loadROM" conforme a API do emulador
-            if (Module.loadROM) {
-              var result = Module.loadROM(romData, romData.length);
-              if (result === 0) {
-                console.log("ROM carregada com sucesso!");
-                // Inicia a emulação – ajuste "startEmulation" conforme necessário
-                if (Module.startEmulation) {
-                  Module.startEmulation();
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>Demo Mobile - Super Mario World</title>
+    <!-- Meta viewport para responsividade em dispositivos móveis -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+      /* Estilos básicos para centralizar o conteúdo e adaptar para mobile */
+      body {
+        margin: 0;
+        background: #000;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+      /* Canvas responsivo */
+      #canvas {
+        width: 100%;
+        max-width: 640px;
+        height: auto;
+        border: 2px solid #fff;
+      }
+      /* Mensagem exibida quando a demo é finalizada */
+      #demo-message {
+        display: none;
+        margin-top: 20px;
+        font-size: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Canvas onde o emulador renderiza o jogo -->
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <!-- Mensagem exibida após 1 minuto -->
+    <div id="demo-message">Demo finalizada. Cadastre-se para jogar mais!</div>
+    
+    <!-- Carrega o script do emulador SNES9x-2005-Wasm (hospedado externamente) -->
+    <script src="https://kazuki-4ys.github.io/web_apps/snes9x-2005-wasm/snes9x.js"></script>
+    
+    <script>
+      // Aguarda a inicialização do módulo WebAssembly do emulador
+      if (typeof Module !== 'undefined') {
+        Module.onRuntimeInitialized = function() {
+          const canvas = document.getElementById('canvas');
+          // Define o canvas para o módulo (pode ser necessário para o emulador renderizar corretamente)
+          Module.canvas = canvas;
+          
+          // Carrega a ROM do Super Mario World a partir do GitHub (link raw)
+          fetch("https://raw.githubusercontent.com/Lusk2000/retroflix/main/Super%20Mario%20World%20(U)%20[!].smc")
+            .then(response => {
+              if (!response.ok) {
+                throw new Error("Erro ao buscar a ROM: " + response.statusText);
+              }
+              return response.arrayBuffer();
+            })
+            .then(romBuffer => {
+              const romData = new Uint8Array(romBuffer);
+              // Carrega a ROM no emulador
+              if (Module.loadROM) {
+                const result = Module.loadROM(romData, romData.length);
+                if (result === 0) {
+                  console.log("ROM carregada com sucesso!");
+                  // Inicia a emulação
+                  if (Module.startEmulation) {
+                    Module.startEmulation();
+                  }
+                  // Define um timer para parar a demo após 1 minuto (60000 ms)
+                  setTimeout(function() {
+                    if (Module.stopEmulation) {
+                      Module.stopEmulation();
+                    }
+                    canvas.style.display = 'none';
+                    document.getElementById('demo-message').style.display = 'block';
+                  }, 60000);
+                } else {
+                  console.error("Erro ao carregar a ROM. Código retornado:", result);
                 }
-                // Define um timer para encerrar a demo após 1 minuto (60000 ms)
+              } else {
+                console.error("Função loadROM não encontrada no Module.");
+              }
+            })
+            .catch(error => {
+              console.error("Erro durante o fetch da ROM:", error);
+            });
+        };
+      } else {
+        console.error("Module não definido. Verifique se o snes9x.js foi carregado corretamente.");
+      }
+    </script>
+  </body>
+</html>
