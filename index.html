@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo - Super Mario World</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    /* Canvas onde o emulador renderiza */
+    #canvas {
+      border: 2px solid #fff;
+    }
+    /* Mensagem exibida quando a demo termina */
+    #demo-message {
+      display: none;
+      margin-top: 20px;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="640" height="480"></canvas>
+  <div id="demo-message">Demo finalizada. Cadastre-se para jogar mais!</div>
+  
+  <!-- Inclua o script do emulador SNES9x-2005-Wasm -->
+  <script src="https://kazuki-4ys.github.io/web_apps/snes9x-2005-wasm/snes9x.js"></script>
+  
+  <script>
+    // Aguarda a inicialização do módulo WebAssembly
+    if (typeof Module !== 'undefined') {
+      Module.onRuntimeInitialized = function() {
+        var canvas = document.getElementById('canvas');
+        // Configura o canvas para renderização (se necessário)
+        Module.canvas = canvas;
+        
+        // Carrega a ROM do Super Mario World a partir do GitHub (link raw)
+        fetch("https://raw.githubusercontent.com/Lusk2000/retroflix/main/Super%20Mario%20World%20(U)%20[!].smc")
+          .then(response => {
+            if (!response.ok) {
+              throw new Error("Erro na resposta: " + response.statusText);
+            }
+            return response.arrayBuffer();
+          })
+          .then(romBuffer => {
+            var romData = new Uint8Array(romBuffer);
+            // Chamada para carregar a ROM – ajuste "loadROM" conforme a API do emulador
+            if (Module.loadROM) {
+              var result = Module.loadROM(romData, romData.length);
+              if (result === 0) {
+                console.log("ROM carregada com sucesso!");
+                // Inicia a emulação – ajuste "startEmulation" conforme necessário
+                if (Module.startEmulation) {
+                  Module.startEmulation();
+                }
+                // Define um timer para encerrar a demo após 1 minuto (60000 ms)
